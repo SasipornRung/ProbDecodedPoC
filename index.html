@@ -160,4 +160,51 @@
   </div>
 
   <scri
+   <!-- ***** เพิ่มต่อจากโค้ดเดิม ใกล้ปิด </script> ***** -->
+<script>
+// ===== 1) อ้างปุ่มใน Gate แบบปลอดภัย =====
+const gBtns = {
+  tenant: document.getElementById('gTenant'),
+  investor: document.getElementById('gInvestor'),
+  renovator: document.getElementById('gRenovator')
+};
+
+// ผูกคลิกใน Gate ให้เลือกเลนส์ได้และเปิดปุ่ม "เริ่มสำรวจ"
+Object.entries(gBtns).forEach(([id, btn]) => {
+  btn.addEventListener('click', () => {
+    chosenLens = id;
+    Object.entries(gBtns).forEach(([k,b]) => b.classList.toggle('active', k===id));
+    startBtn.classList.add('ready');
+  });
+});
+
+// กด "เริ่มสำรวจ" แล้วจำเลนส์ + ปิด Gate + โหลดเนื้อหา
+startBtn.addEventListener('click', () => {
+  if (!chosenLens) return;
+  localStorage.setItem('pd_lens', chosenLens);
+  localStorage.setItem('pd_onboarded', 'yes');
+  applyLens(chosenLens, true);
+  closeGate();
+});
+
+// ถ้ายังไม่เคย on-board ให้เปิด Gate
+if (!localStorage.getItem('pd_onboarded')) {
+  openGate();
+}
+
+// ===== 2) อ้างปุ่มสลับเลนส์บนหน้า และผูกคลิก =====
+const lensBtns = {
+  tenant: document.getElementById('lens-tenant'),
+  investor: document.getElementById('lens-investor'),
+  renovator: document.getElementById('lens-renovator')
+};
+
+lensBtns.tenant.addEventListener('click', () => applyLens('tenant'));
+lensBtns.investor.addEventListener('click', () => applyLens('investor'));
+lensBtns.renovator.addEventListener('click', () => applyLens('renovator'));
+
+// ===== 3) โหลดเลนส์เริ่มต้นตามที่เคยเลือกไว้ =====
+const initialLens = localStorage.getItem('pd_lens') || 'tenant';
+applyLens(initialLens);
+</script> 
     
