@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PropDecoded • PoC</title>
+  <style>
+    :root{
+      --green:#2E7D5B; --green-100:#E9F6F0; --green-300:#BFE3D2;
+      --teal:#1F6F63; --yellow:#F5E29E; --ink:#12333A; --muted:#6A7D80;
+      --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08); --radius:16px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai","Prompt",Arial,sans-serif;background:linear-gradient(180deg,var(--green-100),#F7FAF9);color:var(--ink)}
+    .container{max-width:1120px;margin:0 auto;padding:16px 20px 100px}
+    .header{display:flex;align-items:center;justify-content:space-between;padding:8px 0 4px}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:22px}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;color:#fff;font-weight:800;box-shadow:var(--shadow)}
+    .topnav{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+    .topnav a{text-decoration:none;color:var(--ink);opacity:.8;font-weight:600;padding:8px 12px;border-radius:12px}
+    .topnav a.active{background:#fff;box-shadow:var(--shadow);opacity:1}
+    .welcome{margin:12px 0 10px}
+    .welcome h1{font-size:clamp(28px,6vw,48px);margin:10px 0 4px}
+    .quick-grid{display:grid;gap:14px;grid-template-columns:repeat(4,1fr)}
+    @media (max-width:960px){.quick-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:520px){.quick-grid{grid-template-columns:1fr}}
+    .qcard{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;user-select:none;transition:transform .12s ease,box-shadow .12s ease}
+    .qcard:active{transform:scale(.98)}
+    .qicon{width:36px;height:36px;border-radius:10px;background:var(--green-300);display:grid;place-items:center;font-weight:900;color:var(--teal)}
+    .qtitle{font-weight:800}
+    .hint{color:var(--muted);font-size:13px;margin-top:2px}
+    .lens-bar{margin:18px 0 10px;display:flex;gap:8px;flex-wrap:wrap}
+    .seg{border:2px solid var(--green);border-radius:999px;padding:4px;display:inline-flex;gap:6px;background:#fff;box-shadow:var(--shadow)}
+    .seg button{all:unset;padding:8px 14px;border-radius:999px;color:var(--green);font-weight:700;cursor:pointer}
+    .seg button.active{background:linear-gradient(180deg,var(--green-300),#fff);color:var(--ink);box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+    .main{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:start}
+    @media (max-width:920px){.main{grid-template-columns:1fr}}
+    .map{height:56vh;min-height:320px;border-radius:var(--radius);background:radial-gradient(circle at 10% 20%, rgba(46,125,91,.10), transparent 30%),radial-gradient(circle at 90% 70%, rgba(46,125,91,.08), transparent 35%),#e6eef0;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+    .map::after{content:"แผนที่ (placeholder)";position:absolute;inset:0;display:grid;place-items:center;color:#6b7e80;font-weight:800;letter-spacing:.2px}
+    .insight{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 16px 8px}
+    .insight h3{margin:8px 0 10px}
+    .badge{display:inline-block;background:var(--green-300);color:var(--teal);padding:6px 10px;border-radius:999px;font-weight:700;font-size:13px;margin-right:6px}
+    .meter{height:10px;background:#ECF2F3;border-radius:999px;overflow:hidden}
+    .meter>span{display:block;height:100%;background:linear-gradient(90deg,#CFEBDD,var(--yellow));width:40%}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+    .kpi .card{background:#fff;border:1.5px solid #E5EFE9;border-radius:14px;padding:12px}
+    .kpi h4{margin:0 0 6px}
+    .muted{color:var(--muted)}
+    .btn{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;border:none;padding:10px 14px;border-radius:12px;cursor:pointer;font-weight:800}
+    .expander{margin-top:8px}
+    details{background:#FAFCFB;border:1.5px solid #E5EFE9;border-radius:12px;padding:10px 12px;margin-bottom:8px}
+    summary{cursor:pointer;font-weight:700}
+    .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E6ECE8;display:flex;gap:6px;justify-content:space-around;padding:10px 8px}
+    .bottom-nav a{text-decoration:none;color:var(--ink);display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;opacity:.85}
+    .bottom-nav a.active{color:var(--green)}
+    /* Onboarding Gate */
+    .gate{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.28);padding:20px}
+    .gate .panel{background:#fff;border-radius:20px;max-width:560px;width:100%;box-shadow:var(--shadow);padding:22px}
+    .gHead{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+    .gLogo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--green),var(--teal));display:grid;place-items:center;color:#fff;font-weight:900}
+    .gTitle{font-weight:900;font-size:20px}
+    .seg3{display:flex;gap:8px;margin:12px 0 2px}
+    .seg3 button{all:unset;background:#F4FAF7;border:2px solid #DAEEE5;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:800;color:#10473F}
+    .seg3 button.active{border-color:var(--green);background:#fff;box-shadow:var(--shadow)}
+    .startBtn{opacity:.6;pointer-events:none}
+    .startBtn.ready{opacity:1;pointer-events:auto}
+    .gNote{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">PD</div><div>PropDecoded</div>
+      </div>
+      <nav class="topnav">
+        <a class="active" href="#">หน้าแรก</a>
+        <a href="#">วิเคราะห์พื้นที่</a>
+        <a href="#">รีวิว</a>
+        <a href="#" id="openContact">ติดต่อเรา</a>
+      </nav>
+    </header>
+
+    <section class="welcome"><h1>ยินดีต้อนรับ</h1></section>
+
+    <!-- เมนูกรอบสีขาว 4 อัน -->
+    <section class="quick-grid" aria-label="เมนูด่วน">
+      <div class="qcard" data-action="get-started"><div class="qicon">➤</div><div><div class="qtitle">เริ่มต้นใช้งาน</div><div class="hint">เลือกเลนส์แล้วเริ่มสำรวจ</div></div></div>
+      <div class="qcard" data-action="insights"><div class="qicon">⌁</div><div><div class="qtitle">บทวิเคราะห์</div><div class="hint">อ่าน insight ที่คัดสรร</div></div></div>
+      <div class="qcard" data-action="legal"><div class="qicon">§</div><div><div class="qtitle">ข้อกฎหมายที่ควรทราบ</div><div class="hint">ข้อมูลกลางเพื่อประกอบความเข้าใจ</div></div></div>
+      <div class="qcard" data-action="contact"><div class="qicon">☎</div><div><div class="qtitle">ติดต่อเรา</div><div class="hint">ส่งข้อความถึงทีมงาน</div></div></div>
+    </section>
+
+    <!-- สวิทช์ 3 เลนส์ -->
+    <section class="lens-bar">
+      <div class="seg" role="tablist" aria-label="มุมมองข้อมูล">
+        <button class="active" id="lens-tenant" role="tab" aria-selected="true">ผู้เช่า</button>
+        <button id="lens-investor" role="tab" aria-selected="false">นักลงทุน</button>
+        <button id="lens-renovator" role="tab" aria-selected="false">รีโนเวท/ดีเวลอป</button>
+      </div>
+    </section>
+
+    <!-- Main -->
+    <section class="main">
+      <div class="map" id="mapArea" aria-label="พื้นที่แผนที่"></div>
+      <aside class="insight" id="insightPanel">
+        <span class="badge" id="lensTag">ผู้เช่า</span>
+        <h3 id="areaTitle">วัฒนา</h3>
+        <div class="muted" id="subtitle">ภาพรวมสำหรับผู้อยู่อาศัย</div>
+
+        <div style="margin:12px 0 6px;font-weight:800">ตัวชี้วัดหลัก</div>
+        <div class="meter" title="Primary KPI"><span id="meterFill" style="width:60%"></span></div>
+
+        <div class="kpi">
+          <div class="card"><h4>ข้อมูลย่อ</h4><div class="muted" id="kpiLeftDesc">CBD ~ 18 นาที • BTS ~ 6 นาที</div></div>
+          <div class="card"><h4 id="kpiRightTitle">รีวิวล่าสุด</h4><div class="muted" id="kpiRightDesc">“ย่านเงียบช่วงกลางคืน มีร้านสะดวกซื้อใกล้ ๆ”</div></div>
+        </div>
+
+        <div class="expander" id="expander">
+          <details open><summary>รายละเอียด</summary><p class="muted" id="detailsText">• ตัวอย่างข้อความรายละเอียดจากไฟล์ JSON</p></details>
+          <details><summary>ดูแหล่งข้อมูล</summary><p class="muted">ตัวอย่างลิงก์ข้อมูลสาธารณะ • เพิ่มจริงภายหลัง</p></details>
+        </div>
+
+        <button class="btn" id="seeMore">ดูรายละเอียดเชิงลึก</button>
+      </aside>
+    </section>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" aria-label="เมนูหลักด้านล่าง">
+    <a href="#" class="active">หน้าแรก</a>
+    <a href="#">แผนที่</a>
+    <a href="#">Insight</a>
+    <a href="#" id="moreMenu">เมนูเพิ่มเติม</a>
+  </nav>
+
+  <!-- Onboarding Gate -->
+  <div class="gate" id="gate">
+    <div class="panel">
+      <div class="gHead"><div class="gLogo">PD</div><div class="gTitle">เริ่มต้นใช้งาน PropDecoded</div></div>
+      <p class="muted">เลือกเลนส์ที่คุณต้องการดูเป็นหลัก ระบบจะจำการตั้งค่านี้ไว้ในอุปกรณ์ของคุณ (ปรับได้ภายหลัง)</p>
+      <div class="seg3">
+        <button id="gTenant">ผู้เช่า</button>
+        <button id="gInvestor">นักลงทุน</button>
+        <button id="gRenovator">รีโนเวท/ดีเวลอป</button>
+      </div>
+      <button class="btn startBtn" id="startBtn">เริ่มสำรวจ</button>
+      <div class="gNote">หมายเหตุ: การนำเสนอข้อมูลเป็นกลาง ไม่ใช่คำแนะนำทางกฎหมายหรือการลงทุน</div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modal" style="display:none">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="close" id="closeModal">✕</button>
+      <h3 id="modalTitle">ติดต่อทีมงาน</h3>
+      <p class="muted" id="modalBody">ส่งข้อความถึงเราได้ที่ hello@propdecoded.example</p>
+    </div>
+  </div>
+
+  <scri
