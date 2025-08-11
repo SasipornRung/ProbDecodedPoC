@@ -159,52 +159,118 @@
     </div>
   </div>
 
-  <scri
-   <!-- ***** เพิ่มต่อจากโค้ดเดิม ใกล้ปิด </script> ***** -->
+ <!-- JS -->
 <script>
-// ===== 1) อ้างปุ่มใน Gate แบบปลอดภัย =====
-const gBtns = {
-  tenant: document.getElementById('gTenant'),
-  investor: document.getElementById('gInvestor'),
-  renovator: document.getElementById('gRenovator')
-};
+  // ----- Gate (first visit) -----
+  const gate = document.getElementById('gate');
+  const startBtn = document.getElementById('startBtn');
+  const gBtns = {
+    tenant: document.getElementById('gTenant'),
+    investor: document.getElementById('gInvestor'),
+    renovator: document.getElementById('gRenovator')
+  };
+  let chosenLens = null;
 
-// ผูกคลิกใน Gate ให้เลือกเลนส์ได้และเปิดปุ่ม "เริ่มสำรวจ"
-Object.entries(gBtns).forEach(([id, btn]) => {
-  btn.addEventListener('click', () => {
-    chosenLens = id;
-    Object.entries(gBtns).forEach(([k,b]) => b.classList.toggle('active', k===id));
-    startBtn.classList.add('ready');
+  const openGate = ()=> gate.style.display='flex';
+  const closeGate = ()=> gate.style.display='none';
+
+  Object.entries(gBtns).forEach(([id,btn])=>{
+    btn.addEventListener('click', ()=>{
+      chosenLens = id;
+      Object.entries(gBtns).forEach(([k,b])=> b.classList.toggle('active', k===id));
+      startBtn.classList.add('ready');
+    });
   });
-});
 
-// กด "เริ่มสำรวจ" แล้วจำเลนส์ + ปิด Gate + โหลดเนื้อหา
-startBtn.addEventListener('click', () => {
-  if (!chosenLens) return;
-  localStorage.setItem('pd_lens', chosenLens);
-  localStorage.setItem('pd_onboarded', 'yes');
-  applyLens(chosenLens, true);
-  closeGate();
-});
+  startBtn.addEventListener('click', ()=>{
+    if(!chosenLens) return;
+    localStorage.setItem('pd_lens', chosenLens);
+    localStorage.setItem('pd_onboarded', 'yes');
+    applyLens(chosenLens, true);
+    closeGate();
+  });
 
-// ถ้ายังไม่เคย on-board ให้เปิด Gate
-if (!localStorage.getItem('pd_onboarded')) {
-  openGate();
-}
+  if(!localStorage.getItem('pd_onboarded')) openGate();
 
-// ===== 2) อ้างปุ่มสลับเลนส์บนหน้า และผูกคลิก =====
-const lensBtns = {
-  tenant: document.getElementById('lens-tenant'),
-  investor: document.getElementById('lens-investor'),
-  renovator: document.getElementById('lens-renovator')
-};
+  // ----- Load JSON with fallback -----
+  const fallback = {
+    tenant:{ tag:'ผู้เช่า', subtitle:'ภาพรวมสำหรับผู้อยู่อาศัย', meter:0.62,
+      kpiLeftDesc:'CBD ~ 18 นาที • BTS ~ 6 นาที',
+      kpiRightTitle:'รีวิวล่าสุด',
+      kpiRightDesc:'“เงียบช่วงกลางคืน เดินไปสถานีได้”',
+      detailsText:'• ปลอดภัยในตรอกซอยหลัก<br>• ร้านอาหารท้องถิ่นเยอะ เดินได้<br>• รถติดช่วงเย็นแต่มี BTS เป็นทางเลือก'
+    },
+    investor:{ tag:'นักลงทุน', subtitle:'โอกาสลงทุนและปัจจัยเสี่ยง (โทนเป็นกลาง)', meter:0.72,
+      kpiLeftDesc:'ราคา/ตร.ม. (ช่วง) • ตัวอย่าง',
+      kpiRightTitle:'Opportunity',
+      kpiRightDesc:'Yield proxy ~ 5.6% • Resilience: ดี',
+      detailsText:'• Disaster Resilience: ฟื้นตัวไวหลังเหตุการณ์ใหญ่<br>• Foreign Buyer Pressure: ปานกลาง<br>• ROI Gap: สูงกว่าพื้นที่รอบข้างเล็กน้อย'
+    },
+    renovator:{ tag:'รีโนเวท/ดีเวลอป', subtitle:'ศักยภาพเพิ่มมูลค่าจากการปรับปรุง (ข้อมูลทั่วไป)', meter:0.5,
+      kpiLeftDesc:'อายุอาคาร ~ กลาง • สภาพรวม: มาตรฐาน',
+      kpiRightTitle:'Value Uplift',
+      kpiRightDesc:'Quick wins: แสง/ไฟ, งานสี, วัสดุพื้นผิว',
+      detailsText:'• Pain points: แสงน้อย/เสียงรบกวนบ้าง<br>• ไอเดีย: เปลี่ยนไฟ/ซีลประตู/ปรับผ้าม่าน<br>• อ่านข้อกฎหมายเพิ่มเติมได้ใน “ข้อกฎหมายที่ควรทราบ”'
+    }
+  };
 
-lensBtns.tenant.addEventListener('click', () => applyLens('tenant'));
-lensBtns.investor.addEventListener('click', () => applyLens('investor'));
-lensBtns.renovator.addEventListener('click', () => applyLens('renovator'));
+  async function loadLensContent(lens){
+    try{
+      const res = await fetch(lens + '.json', {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      return await res.json();
+    }catch(e){
+      return fallback[lens];
+    }
+  }
 
-// ===== 3) โหลดเลนส์เริ่มต้นตามที่เคยเลือกไว้ =====
-const initialLens = localStorage.getItem('pd_lens') || 'tenant';
-applyLens(initialLens);
-</script> 
+  // ----- Wire lens buttons -----
+  const lensBtns = {
+    tenant: document.getElementById('lens-tenant'),
+    investor: document.getElementById('lens-investor'),
+    renovator: document.getElementById('lens-renovator')
+  };
+  const lensTag = document.getElementById('lensTag');
+  const subtitle = document.getElementById('subtitle');
+  const meterFill = document.getElementById('meterFill');
+  const kpiLeftDesc = document.getElementById('kpiLeftDesc');
+  const kpiRightTitle = document.getElementById('kpiRightTitle');
+  const kpiRightDesc = document.getElementById('kpiRightDesc');
+  const detailsText = document.getElementById('detailsText');
+
+  async function applyLens(lens){
+    localStorage.setItem('pd_lens', lens);
+    Object.entries(lensBtns).forEach(([id,btn])=>{
+      btn.classList.toggle('active', id===lens);
+      btn.setAttribute('aria-selected', id===lens ? 'true' : 'false');
+    });
+    const c = await loadLensContent(lens);
+    lensTag.textContent = c.tag || '';
+    subtitle.textContent = c.subtitle || '';
+    meterFill.style.width = Math.round((c.meter||0)*100) + '%';
+    kpiLeftDesc.textContent = c.kpiLeftDesc || '';
+    kpiRightTitle.textContent = c.kpiRightTitle || '';
+    kpiRightDesc.textContent = c.kpiRightDesc || '';
+    detailsText.innerHTML = c.detailsText || '';
+  }
+
+  lensBtns.tenant.addEventListener('click', ()=>applyLens('tenant'));
+  lensBtns.investor.addEventListener('click', ()=>applyLens('investor'));
+  lensBtns.renovator.addEventListener('click', ()=>applyLens('renovator'));
+
+  // ----- Modal (ติดต่อเรา) -----
+  const modal = document.getElementById('modal');
+  const closeModalBtn = document.getElementById('closeModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalBody = document.getElementById('modalBody');
+  const openContact = document.getElementById('openContact');
+  function openModal(title, body){ modalTitle.textContent = title; modalBody.textContent = body; modal.style.display='flex'; }
+  closeModalBtn.addEventListener('click', ()=> modal.style.display='none');
+  modal.addEventListener('click', e=>{ if(e.target === modal) modal.style.display='none'; });
+  openContact.addEventListener('click', e=>{ e.preventDefault(); openModal('ติดต่อทีมงาน','ส่งข้อความถึงเราได้ที่ hello@propdecoded.example'); });
+
+  // ----- Initial lens -----
+  const initialLens = localStorage.getItem('pd_lens') || 'tenant';
+  applyLens(initialLens);
+</script>
     
