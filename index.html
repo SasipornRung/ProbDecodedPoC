@@ -377,6 +377,13 @@ openContact.addEventListener('click', e=>{ e.preventDefault(); openModal('ติ
 const initialLens = localStorage.getItem('pd_lens') || 'tenant';
 applyLens(initialLens);
 </script>
+   document.addEventListener('DOMContentLoaded', function () {
+    // ซ่อนป๊อปอัป
+    const popup = document.querySelector('.lens-popup'); 
+    if (popup) {
+      popup.style.display = 'none';
+    }
+  });
 </body>
 </html>
   
