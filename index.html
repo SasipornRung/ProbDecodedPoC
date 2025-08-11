@@ -384,6 +384,21 @@ applyLens(initialLens);
       popup.style.display = 'none';
     }
   });
+  <script>
+document.addEventListener("DOMContentLoaded", function() {
+    const popup = document.getElementById("popup");
+    const overlay = document.getElementById("overlay"); // สมมติว่ามี div overlay
+    const closeBtn = document.getElementById("close-popup");
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+            popup.style.display = "none";
+            if (overlay) overlay.style.display = "none";
+            document.body.style.overflow = "auto"; // ให้สกอร์ได้ตามปกติ
+        });
+    }
+});
+</script>
 </body>
 </html>
   
